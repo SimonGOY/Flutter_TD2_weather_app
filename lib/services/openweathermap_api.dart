@@ -21,4 +21,28 @@ class OpenWeatherMapApi {
   String getIconUrl(String icon) {
     return 'https://openweathermap.org/img/wn/$icon@4x.png';
   }
+
+  Future<Iterable<Location>> searchLocations(
+    String query, {
+    int limit = 5,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/geo/1.0/direct?appid=$apiKey&q=$query&limit=$limit'),
+    );
+
+    if (response.statusCode == HttpStatus.ok) {
+    var jsonList = jsonDecode(response.body);
+    List<Location> locations = [];
+
+    for (var jsonLocation in jsonList) {
+      locations.add(Location.fromJson(jsonLocation));
+    }
+
+    return locations;
+  }
+
+    throw Exception('Impossible de récupérer les données de localisation (HTTP ${response.statusCode})');
+  }
+
+  
 }

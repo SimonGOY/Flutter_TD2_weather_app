@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/config.dart';
+import 'package:weather_app/services/openweathermap_api.dart';
 import 'package:weather_app/ui/search_page.dart';
 
 void main() {
   runApp(
-    const WeatherApp(),
+    Provider(
+      create: (_) => OpenWeatherMapApi(apiKey: openWeatherMapApiKey),
+      child: const WeatherApp(),
+    )
   );
 }
 
@@ -13,10 +18,10 @@ class WeatherApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Weather App',
-      theme: ThemeData.dark(),
-      home: SearchPage(),
-    );
-  }
+        return MaterialApp(
+          title: 'Weather App',
+          theme: ThemeData.dark(),
+          home:  SearchPage(),
+        );
+      }
 }
