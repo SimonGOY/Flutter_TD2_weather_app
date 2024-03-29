@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/models/location.dart';
 import 'package:weather_app/services/openweathermap_api.dart';
+import 'package:weather_app/ui/weather_page.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -9,6 +14,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   String query = '';
+  Future<Iterable<Location>>? locationsSearchResults;
   
 
   @override
@@ -36,43 +42,59 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.all(15.0),
               child: ElevatedButton(
                 onPressed: () {
-                  print(query);
+                  setState(() {
+                    locationsSearchResults = openWeatherMapApi.searchLocations(query);
+                  });
                 },
                 child: const Text("Rechercher"),
               ),
             ),
-           Expanded(
-              child: FutureBuilder(
-                future: openWeatherMapApi.searchLocations(query),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  }
 
-                  if (snapshot.hasError) {
-                    return Text('Une erreur est survenue.\n${snapshot.error}');
-                  }
+            if (query.isEmpty)
+              const Text('Saisissez une ville dans la barre de recherche.')
+            else
+            
+            FutureBuilder(
+              future: locationsSearchResults ,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
 
-                  if (!snapshot.hasData || (snapshot.data as Iterable).isEmpty) {
-                    return const Text('Aucun résultat pour cette recherche.');
-                  }
+                if (snapshot.hasError) {
+                  return Text('Une erreur est survenue.\n${snapshot.error}');
+                }
 
-                  // Afficher les résultats dans un ListView
-                  return ListView.builder(
-                    itemCount: (snapshot.data as Iterable).length,
+                if (!snapshot.hasData || (snapshot.data as List<Location>).isEmpty) {
+                  return const Text('Aucun résultat pour cette recherche.');
+                }
+
+                // Afficher les résultats dans des ListTiles
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: (snapshot.data as List<Location>).length,
                     itemBuilder: (context, index) {
-                      // Récupérer chaque objet Location à partir de snapshot.data
-                      var location = (snapshot.data as Iterable).elementAt(index);
-
-                      // Afficher les informations de la location dans un ListTile, par exemple
+                      var location = (snapshot.data as List<Location>)[index];
                       return ListTile(
                         title: Text(location.name),
                         subtitle: Text('${location.lat}, ${location.lon}'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (BuildContext context) => WeatherPage(
+                                locationName: location.name,
+                                latitude: location.lat,
+                                longitude: location.lon,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ],
         ),

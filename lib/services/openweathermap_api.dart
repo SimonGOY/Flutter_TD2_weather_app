@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:weather_app/models/weather.dart';
 
 import '../models/location.dart';
 
@@ -31,18 +32,35 @@ class OpenWeatherMapApi {
     );
 
     if (response.statusCode == HttpStatus.ok) {
-    var jsonList = jsonDecode(response.body);
-    List<Location> locations = [];
+      var jsonList = jsonDecode(response.body);
+      List<Location> locations = [];
 
-    for (var jsonLocation in jsonList) {
-      locations.add(Location.fromJson(jsonLocation));
+      for (var jsonLocation in jsonList) {
+        locations.add(Location.fromJson(jsonLocation));
+      }
+
+      return locations;
     }
-
-    return locations;
-  }
 
     throw Exception('Impossible de récupérer les données de localisation (HTTP ${response.statusCode})');
   }
+
+  Future<Weather> getWeather(double lat, double lon) async {
+  final response = await http.get(
+    Uri.parse(
+      '$baseUrl/data/2.5/weather?appid=$apiKey&lat=$lat&lon=$lon&units=$units&lang=$lang',
+    ),
+  );
+
+  if (response.statusCode == HttpStatus.ok) {
+    var jsonMap = jsonDecode(response.body);
+    Weather weather = Weather.fromJson(jsonMap);
+    return weather;
+  }
+
+  throw Exception(
+      'Impossible de récupérer les données météo (HTTP ${response.statusCode})');
+}
 
   
 }
