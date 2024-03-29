@@ -77,7 +77,7 @@ class _SearchPageState extends State<SearchPage> {
                       var location = (snapshot.data as List<Location>)[index];
                       return ListTile(
                         title: Text(location.name),
-                        subtitle: Text('${location.lat}, ${location.lon}'),
+                        subtitle: Text('Pays : ${location.country}\nLat : ${location.lat}, Long : ${location.lon}'),
                         onTap: () {
                           Navigator.push(
                             context,

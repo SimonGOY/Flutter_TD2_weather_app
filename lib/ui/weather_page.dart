@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:weather_app/config.dart';
@@ -9,8 +10,8 @@ class WeatherPage extends StatefulWidget {
     required this.locationName,
     required this.latitude,
     required this.longitude,
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   final String locationName;
   final double latitude;
@@ -21,40 +22,68 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
-  
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     var openWeatherMapApi = context.read<OpenWeatherMapApi>();
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Météo à ${widget.locationName}'),
+      ),
       body: FutureBuilder(
         future: openWeatherMapApi.getWeather(widget.latitude, widget.longitude),
-        builder: (context, snapshot) {
+        builder: (context, AsyncSnapshot<Weather> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Text('Une erreur est survenue.\n${snapshot.error}');
+            return Center(
+              child: Text(
+                'Erreur: ${snapshot.error}',
+                style: TextStyle(color: Colors.red),
+              ),
+            );
           }
 
           if (!snapshot.hasData) {
-            return const Text('Aucun résultat pour cette recherche.');
+            return Center(
+              child: Text(
+                'Aucune donnée disponible.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            );
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.network(openWeatherMapApi.getIconUrl(snapshot.data!.icon)),
-              Text('${snapshot.data!.desc}'),
-              Text('${snapshot.data!.icon}'),
-              Text('${snapshot.data!.temp.toStringAsFixed(2)}'),
-            ],
+          final weather = snapshot.data!;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${weather.desc}',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${weather.temp.toStringAsFixed(1)}°C',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Center(
+                  child: Image.network(
+                    openWeatherMapApi.getIconUrl(weather.icon),
+                    width: 200, // Augmentez la largeur de l'image
+                    height: 200, // Augmentez la hauteur de l'image
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
